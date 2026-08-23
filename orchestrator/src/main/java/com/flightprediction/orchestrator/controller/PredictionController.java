@@ -1,6 +1,5 @@
 package com.flightprediction.orchestrator.controller;
 
-import com.flightprediction.orchestrator.dto.MlPredictionResponse;
 import com.flightprediction.orchestrator.entity.PredictionLog;
 import com.flightprediction.orchestrator.repository.PredictionLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,28 @@ import org.springframework.web.client.RestClient;
 @RequestMapping("/api/flights")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PredictionController {
+
+    /** Response returned by the ML service. */
+    public static class MlPredictionResponse {
+        private Double delayProbability;
+        private String status;
+
+        public Double getDelayProbability() {
+            return delayProbability;
+        }
+
+        public void setDelayProbability(Double delayProbability) {
+            this.delayProbability = delayProbability;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
 
     @Autowired
     private PredictionLogRepository repository;
