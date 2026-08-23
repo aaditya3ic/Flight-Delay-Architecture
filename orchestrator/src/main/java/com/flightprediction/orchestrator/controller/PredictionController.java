@@ -1,31 +1,54 @@
 package com.flightprediction.orchestrator.controller;
 
+import com.flightprediction.orchestrator.dto.MlPredictionResponse;
 import com.flightprediction.orchestrator.entity.PredictionLog;
 import com.flightprediction.orchestrator.repository.PredictionLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 
 @RestController
 @RequestMapping("/api/flights")
-@CrossOrigin(origins = "http://localhost:3000") // This explicitly allows your future React app to connect
+@CrossOrigin(origins = "http://localhost:3000")
 public class PredictionController {
 
     @Autowired
     private PredictionLogRepository repository;
 
+    private final RestClient restClient = RestClient.builder()
+            .baseUrl("http://127.0.0.1:8000")
+            .build();
+
     @PostMapping("/predict")
     public ResponseEntity<PredictionLog> predictFlightDelay(@RequestBody PredictionLog request) {
         
-        // 1. Mark the initial status
-        request.setStatus("Pending ML Engine");
-        
-        // 2. Save the incoming request to the PostgreSQL database
+        try {
+            // 1. Call the FastAPI ML Microservice
+            MlPredictionResponse mlResponse = restClient.post()
+                    .uri("/predict")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(MlPredictionResponse.class);
+
+            // 2. Attach ML results to the Entity
+            if (mlResponse != null) {
+                request.setDelayProbability(mlResponse.getDelayProbability());
+                request.setStatus("Processed: " + mlResponse.getStatus());
+            } else {
+                request.setStatus("Failed: Empty ML response");
+            }
+
+        } catch (Exception e) {
+            // Fallback if the Python server is offline or unreachable
+            request.setStatus("Error connecting to ML Engine: " + e.getMessage());
+        }
+
+        // 3. Persist the record in PostgreSQL
         PredictionLog savedLog = repository.save(request);
-        
-        // (Next Phase: We will add the HTTP client here to forward data to Python)
-        
-        // 3. Return the saved record with its new Database ID
+
         return ResponseEntity.ok(savedLog);
     }
 }
