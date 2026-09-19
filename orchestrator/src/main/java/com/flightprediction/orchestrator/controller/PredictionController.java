@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClient;
 
 @RestController
 @RequestMapping("/api/flights")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PredictionController {
 
     /** Response returned by the ML service. */
