@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 
 @RestController
-@RequestMapping("/api/flights")
-@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/api/v1/flights")
+@CrossOrigin(origins = "https://flight-delay-app-black.vercel.app") 
 public class PredictionController {
-
     /** Response returned by the ML service. */
     public static class MlPredictionResponse {
         private Double delayProbability;
